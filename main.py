@@ -53,20 +53,25 @@ def get_nft_winners():
     >>> get_nft_winners()
     [123, 456, 789]
     """
-    logger.info("Get the list of the NFT winners")
-    status = "success"
-    nft_airdrop_quest_completers = get_zealy_api_data(
-        subdomain,
-        x_api_key,
-        nft_drop_quest_id,
-        status
-        )
-    nft_airdrop_user_ids = []
-    for item in nft_airdrop_quest_completers['data']:
-        nft_airdrop_user_id = item['user']['id']
-        nft_airdrop_user_ids.append(nft_airdrop_user_id)
-    logger.debug("nft_airdrop_user_ids %s", nft_airdrop_user_ids)
-    return nft_airdrop_user_ids
+    try:
+      logger.info("Get the list of the NFT winners")
+      status = "success"
+      nft_airdrop_quest_completers = get_zealy_api_data(
+          subdomain,
+          x_api_key,
+          nft_drop_quest_id,
+          status
+          )
+      nft_airdrop_user_ids = []
+      for item in nft_airdrop_quest_completers['data']:
+          nft_airdrop_user_id = item['user']['id']
+          nft_airdrop_user_ids.append(nft_airdrop_user_id)
+      logger.debug("nft_airdrop_user_ids %s", nft_airdrop_user_ids)
+      return nft_airdrop_user_ids
+    except Exception as e:
+      logger.warning("An error occurred in get_nft_winners(): %s", e)
+      sleep(300)
+      continue
 
 def get_smr_address_submitters(status):
     """
@@ -81,28 +86,34 @@ def get_smr_address_submitters(status):
     Example:
     get_smr_address_submitters('success')  # Returns ['43289723890', '3290480239']
     """
-    logger.info("Query Zealy for submitted addresses")
-    smr_address_quest_completers = get_zealy_api_data(
-        subdomain,
-        x_api_key,
-        smr_address_quest_id,
-        status
-        )
-    smr_address_submitters = []
-    for item in smr_address_quest_completers['data']:
-        smr_address_user_id = item['user']['id']
-        smr_address = item['submission']['value']
-        # Remove any excessive characters/text from possible input
-        match = re.search(r"smr1\w+", smr_address)
-        if match:
-            smr_address = match.group()
-        else:
-            continue
-        smr_address_user_object = (smr_address_user_id, smr_address)
-        smr_address_submitters.append(smr_address_user_object)
-
-    logger.debug("smr_address_submitters %s", smr_address_submitters)
-    return smr_address_submitters
+    try:
+      logger.info("Query Zealy for submitted addresses")
+      smr_address_quest_completers = get_zealy_api_data(
+          subdomain,
+          x_api_key,
+          smr_address_quest_id,
+          status
+          )
+      smr_address_submitters = []
+      for item in smr_address_quest_completers['data']:
+          smr_address_user_id = item['user']['id']
+          smr_address = item['submission']['value']
+          # Remove any excessive characters/text from possible input
+          match = re.search(r"smr1\w+", smr_address)
+          if match:
+              smr_address = match.group()
+          else:
+              continue
+          smr_address_user_object = (smr_address_user_id, smr_address)
+          smr_address_submitters.append(smr_address_user_object)
+  
+      logger.debug("smr_address_submitters %s", smr_address_submitters)
+      return smr_address_submitters
+      
+    except Exception as e:
+      logger.warning("An error occurred in get_smr_address_submitters(): %s", e)
+      sleep(300)
+      continue
 
 def get_smr_address_from_quest_completers():
     """
@@ -117,26 +128,32 @@ def get_smr_address_from_quest_completers():
     list of str:
         A list of SMR addresses of users who completed the quest and won the NFT airdrop.
     """
-    logger.info("Get %s address from the quest completers", shimmer_address_hrp)
-    nft_airdrop_quest_completers = get_nft_winners()
-    logger.debug("NFT Winners %s", nft_airdrop_quest_completers)
-
-    smr_address_quest_completers = get_smr_address_submitters(status="success")
-    logger.debug("Address Submitters %s", smr_address_quest_completers)
-
-    # Iterate over each element in smr_address_submitters
-    smr_addresses = []
-    for submitter in smr_address_quest_completers:
-        user_id, smr_address = submitter
-        # Check if the discord ID is in nft_airdrop_user_ids
-        if user_id in nft_airdrop_quest_completers:
-            # If it is, append the SMR address to the smr_addresses list
-            smr_addresses.append(smr_address)
-    logger.debug("appended addresses %s", smr_addresses)
-    smr_addresses = unique_addresses(smr_addresses)
-    logger.debug("unique addresses %s", smr_addresses)
-    return smr_addresses
-
+    try:
+      logger.info("Get %s address from the quest completers", shimmer_address_hrp)
+      nft_airdrop_quest_completers = get_nft_winners()
+      logger.debug("NFT Winners %s", nft_airdrop_quest_completers)
+  
+      smr_address_quest_completers = get_smr_address_submitters(status="success")
+      logger.debug("Address Submitters %s", smr_address_quest_completers)
+  
+      # Iterate over each element in smr_address_submitters
+      smr_addresses = []
+      for submitter in smr_address_quest_completers:
+          user_id, smr_address = submitter
+          # Check if the discord ID is in nft_airdrop_user_ids
+          if user_id in nft_airdrop_quest_completers:
+              # If it is, append the SMR address to the smr_addresses list
+              smr_addresses.append(smr_address)
+      logger.debug("appended addresses %s", smr_addresses)
+      smr_addresses = unique_addresses(smr_addresses)
+      logger.debug("unique addresses %s", smr_addresses)
+      return smr_addresses
+      
+    except Exception as e:
+      logger.warning("An error occurred in get_smr_address_from_quest_completers(): %s", e)
+      sleep(300)
+      continue
+      
 def send_to_address(addresses):
     """Send NFTs to the provided addresses, if any.
 
